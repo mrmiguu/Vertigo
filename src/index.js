@@ -184,12 +184,24 @@ function App() {
       if (!src) return
       if (!dst) return
 
-      // setMap(map => ({ ...map, [dst[0]]: { [dst[1]]: src } }))
+      const [dx, dy] = dst
+      const [sx, sy] = src
 
       const history = edits.slice(e)
-      const prev = history[0]
-      const map = merge(prev, { [dst[0]]: { [dst[1]]: { sx: src[0], sy: src[1] } } })
-      setEdits([map, ...history])
+      const map = history[0]
+
+      if (map[dx]) {
+        if (map[dx][dy]) {
+          if (map[dx][dy].sx === sx) {
+            if (map[dx][dy].sy === sy) {
+              return
+            }
+          }
+        }
+      }
+
+      const next = merge(map, { [dx]: { [dy]: { sx, sy } } })
+      setEdits([next, ...history])
       setE(0)
 
       setDst()
