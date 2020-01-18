@@ -13,6 +13,8 @@ import {
   render,
 } from 'react-dom'
 
+import merge from 'deepmerge'
+
 const {
   keys,
   values,
@@ -124,7 +126,11 @@ function App() {
     [m]
   )
 
-  const [map, setMap] = useState({ 0: { 0: [0, 32] } })
+  const [edits, setEdits] = useState([{}])
+  const [e, setE] = useState(0)
+  const map = edits[e]
+  // const [map, setMap] = useState({})
+
   const [src, setSrc] = useState()
   const [dst, setDst] = useState()
 
@@ -177,10 +183,41 @@ function App() {
     () => {
       if (!src) return
       if (!dst) return
-      setMap(map => ({ ...map, [dst[0]]: { [dst[1]]: src } }))
+
+      // setMap(map => ({ ...map, [dst[0]]: { [dst[1]]: src } }))
+
+      const history = edits.slice(e)
+      const prev = history[0]
+      const map = merge(prev, { [dst[0]]: { [dst[1]]: { sx: src[0], sy: src[1] } } })
+      setEdits([map, ...history])
+      setE(0)
+
       setDst()
     },
-    [src, dst]
+    [src, dst, edits, e]
+  )
+
+  useEffect(
+    () => {
+
+      /**
+       * @param {KeyboardEvent} e 
+       */
+      function onKeyDown(e) {
+        if (e.key === 'z') {
+          console.log('undoing...')
+          setE(e => min(e + 1, edits.length - 1))
+        }
+        if (e.key === 'y') {
+          console.log('redoing...')
+          setE(e => max(e - 1, 0))
+        }
+      }
+
+      window.addEventListener('keydown', onKeyDown)
+      return () => window.removeEventListener('keydown', onKeyDown)
+    },
+    [edits]
   )
 
   useEffect(
@@ -215,14 +252,19 @@ function App() {
     () => {
       if (!tileSet0) return
 
+      console.log('redrawing...')
+
       const canvas = canvasRef.current
       const context = canvas.getContext('2d')
 
       const dxs = keys(map)
+      // if (!dxs.length) {
+      context.clearRect(0, 0, canvas.width, canvas.height)
+      // }
       for (const dx of dxs) {
         const dys = keys(map[dx])
         for (const dy of dys) {
-          const [sx, sy] = map[dx][dy]
+          const { sx, sy } = map[dx][dy]
           context.drawImage(tileSet0, sx, sy, 32, 32, dx, dy, 32, 32)
         }
       }
