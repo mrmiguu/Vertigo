@@ -129,7 +129,6 @@ function App() {
   const [edits, setEdits] = useState([{}])
   const [e, setE] = useState(0)
   const map = edits[e]
-  // const [map, setMap] = useState({})
 
   const [src, setSrc] = useState()
   const [dst, setDst] = useState()
@@ -187,24 +186,25 @@ function App() {
       const [dx, dy] = dst
       const [sx, sy] = src
 
+      setDst()
+
       const history = edits.slice(e)
       const map = history[0]
 
       if (map[dx]) {
         if (map[dx][dy]) {
-          if (map[dx][dy].sx === sx) {
-            if (map[dx][dy].sy === sy) {
-              return
-            }
+          const s = map[dx][dy]
+          const last = s[s.length - 1]
+          if (last[0] === sx && last[1] === sy) {
+            console.log('tile already placed at this layer; skipping...')
+            return
           }
         }
       }
 
-      const next = merge(map, { [dx]: { [dy]: { sx, sy } } })
+      const next = merge(map, { [dx]: { [dy]: [src] } })
       setEdits([next, ...history])
       setE(0)
-
-      setDst()
     },
     [src, dst, edits, e]
   )
@@ -269,15 +269,13 @@ function App() {
       const canvas = canvasRef.current
       const context = canvas.getContext('2d')
 
-      const dxs = keys(map)
-      // if (!dxs.length) {
       context.clearRect(0, 0, canvas.width, canvas.height)
-      // }
-      for (const dx of dxs) {
-        const dys = keys(map[dx])
-        for (const dy of dys) {
-          const { sx, sy } = map[dx][dy]
-          context.drawImage(tileSet0, sx, sy, 32, 32, dx, dy, 32, 32)
+
+      for (const dx in map) {
+        for (const dy in map[dx]) {
+          for (const [sx, sy] of map[dx][dy]) {
+            context.drawImage(tileSet0, sx, sy, 32, 32, dx, dy, 32, 32)
+          }
         }
       }
     },
