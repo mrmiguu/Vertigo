@@ -128,31 +128,49 @@ function App() {
   const [src, setSrc] = useState()
   const [dst, setDst] = useState()
 
+  const [adding, setAdding] = useState()
+
   useEffect(
     () => {
       function onMouseDown() {
-        const canvas = canvasRef.current
-        const selSheet = selSheetRef.current
-        const sel = selRef.current
-        const selRect = sel.getBoundingClientRect()
-        const targetRect = hoverElem.getBoundingClientRect()
-
-        const targetX = selRect.left - targetRect.left
-        const targetY = selRect.top - targetRect.top
-
-        console.log(`tapped target [${[targetX, targetY]}]`)
-
-        if (hoverElem === selSheet) {
-          setSrc([targetX, targetY])
-        } else if (hoverElem === canvas) {
-          setDst([targetX, targetY])
-        }
+        setAdding(true)
+      }
+      function onMouseUp() {
+        setAdding()
       }
 
       window.addEventListener('mousedown', onMouseDown)
-      return () => window.removeEventListener('mousedown', onMouseDown)
+      window.addEventListener('mouseup', onMouseUp)
+      return () => {
+        window.removeEventListener('mousedown', onMouseDown)
+        window.removeEventListener('mouseup', onMouseUp)
+      }
     },
     [hoverElem, src]
+  )
+
+  useEffect(
+    () => {
+      if (!adding) return
+
+      const canvas = canvasRef.current
+      const selSheet = selSheetRef.current
+      const sel = selRef.current
+      const selRect = sel.getBoundingClientRect()
+      const targetRect = hoverElem.getBoundingClientRect()
+
+      const targetX = selRect.left - targetRect.left
+      const targetY = selRect.top - targetRect.top
+
+      console.log(`tapping target [${[targetX, targetY]}]`)
+
+      if (hoverElem === selSheet) {
+        setSrc([targetX, targetY])
+      } else if (hoverElem === canvas) {
+        setDst([targetX, targetY])
+      }
+    },
+    [m, adding]
   )
 
   useEffect(
