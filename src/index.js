@@ -113,6 +113,8 @@ function App() {
 
       setHoverElem(elem)
 
+      if (!elem) return
+
       const { left, top } = elem.getBoundingClientRect()
       const tx = ~~((mx - left) / 32)
       const ty = ~~((my - top) / 32)
