@@ -136,7 +136,7 @@ function App() {
   const [dst, setDst] = useState()
 
   const [adding, setAdding] = useState()
-  const [removing, setRemoving] = useState()
+  const [removing, setDeleting] = useState()
 
   useEffect(
     () => {
@@ -160,10 +160,14 @@ function App() {
   useEffect(
     () => {
       if (!adding) return
+      if (!hoverElem) return
 
       const canvas = canvasRef.current
       const selSheet = selSheetRef.current
+
       const sel = selRef.current
+      if (!sel) return
+
       const selRect = sel.getBoundingClientRect()
       const targetRect = hoverElem.getBoundingClientRect()
 
@@ -198,10 +202,9 @@ function App() {
         if (map[dx][dy]) {
 
           const s = map[dx][dy]
+          if (!s.length) return
 
           if (removing) {
-            if (!s.length) return
-
             const next = merge({}, map)
 
             next[dx][dy].pop()
@@ -242,9 +245,9 @@ function App() {
           console.log('redoing...')
           setE(e => max(e - 1, 0))
         }
-        if (e.key === 'r') {
-          console.log('toggling removal...')
-          setRemoving(r => !r)
+        if (e.key === 'd') {
+          console.log('toggling deletion...')
+          setDeleting(d => !d)
         }
       }
 
