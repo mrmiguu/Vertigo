@@ -136,6 +136,7 @@ function App() {
   const [dst, setDst] = useState()
 
   const [adding, setAdding] = useState()
+  const [removing, setRemoving] = useState()
 
   useEffect(
     () => {
@@ -153,7 +154,7 @@ function App() {
         window.removeEventListener('mouseup', onMouseUp)
       }
     },
-    [hoverElem, src]
+    []
   )
 
   useEffect(
@@ -195,7 +196,22 @@ function App() {
 
       if (map[dx]) {
         if (map[dx][dy]) {
+
           const s = map[dx][dy]
+
+          if (removing) {
+            if (!s.length) return
+
+            const next = merge({}, map)
+
+            next[dx][dy].pop()
+
+            setEdits([next, ...history])
+            setE(0)
+
+            return
+          }
+
           const last = s[s.length - 1]
           if (last[0] === sx && last[1] === sy) {
             console.log('tile already placed at this layer; skipping...')
@@ -208,7 +224,7 @@ function App() {
       setEdits([next, ...history])
       setE(0)
     },
-    [src, dst, edits, e]
+    [src, dst, edits, e, removing]
   )
 
   useEffect(
@@ -225,6 +241,10 @@ function App() {
         if (e.key === 'y') {
           console.log('redoing...')
           setE(e => max(e - 1, 0))
+        }
+        if (e.key === 'r') {
+          console.log('toggling removal...')
+          setRemoving(r => !r)
         }
       }
 
