@@ -13,6 +13,11 @@ import {
   render,
 } from 'react-dom'
 
+import {
+  useMouse,
+  useDownloadable,
+} from './use'
+
 import merge from 'deepmerge'
 
 const {
@@ -28,46 +33,7 @@ const {
 } = Math
 
 const tiles_0 = require('../assets/tiles_0.png')
-
-function useMouse() {
-
-  /** @type {[number[], Dispatch<SetStateAction<number[]>>]} */
-  const [mouse, setMouse] = useState()
-
-  useEffect(
-    () => {
-
-      /**
-       * @param {MouseEvent} e 
-       */
-      function onMouseMove(e) {
-        setMouse([e.clientX, e.clientY])
-      }
-
-      window.addEventListener('mousemove', onMouseMove)
-      return () => window.removeEventListener('mousemove', onMouseMove)
-    },
-    []
-  )
-
-  useEffect(
-    () => {
-
-      /**
-       * @param {Event} e 
-       */
-      function onScroll(e) {
-        setMouse(m => m && [m[0], m[1]])
-      }
-
-      window.addEventListener('scroll', onScroll)
-      return () => window.removeEventListener('scroll', onScroll)
-    },
-    [mouse]
-  )
-
-  return mouse
-}
+const map_0 = require('../assets/map.json')
 
 function App() {
 
@@ -122,21 +88,25 @@ function App() {
       const y = top + (ty * 32)
 
       setSel([x, y])
-
-      // console.log(`hovering ${elem.outerHTML} (who is at [${[left, top, elem.style.zIndex]}])`)
     },
     [m]
   )
 
-  const [edits, setEdits] = useState([{}])
+  // const [edits, setEdits] = useState([{}])
+  const [edits, setEdits] = useState([map_0])
   const [e, setE] = useState(0)
   const map = edits[e]
+
+  const [downloading, setDownloading] = useState()
+  useDownloadable(map, downloading)
 
   const [src, setSrc] = useState()
   const [dst, setDst] = useState()
 
-  const [adding, setAdding] = useState()
-  const [removing, setDeleting] = useState()
+  const [adding, setAdding] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+
+  const [editing, setEditing] = useState(false)
 
   useEffect(
     () => {
@@ -187,11 +157,10 @@ function App() {
 
   useEffect(
     () => {
-      if (!src) return
+      if (!src && !deleting) return
       if (!dst) return
 
       const [dx, dy] = dst
-      const [sx, sy] = src
 
       setDst()
 
@@ -199,12 +168,12 @@ function App() {
       const map = history[0]
 
       if (map[dx]) {
-        if (map[dx][dy]) {
+        if (map[dx][dy] && map[dx][dy].length) {
 
           const s = map[dx][dy]
           if (!s.length) return
 
-          if (removing) {
+          if (deleting) {
             const next = merge({}, map)
 
             next[dx][dy].pop()
@@ -216,6 +185,8 @@ function App() {
           }
 
           const last = s[s.length - 1]
+          const [sx, sy] = src
+
           if (last[0] === sx && last[1] === sy) {
             console.log('tile already placed at this layer; skipping...')
             return
@@ -227,7 +198,7 @@ function App() {
       setEdits([next, ...history])
       setE(0)
     },
-    [src, dst, edits, e, removing]
+    [src, dst, edits, e, deleting]
   )
 
   useEffect(
@@ -237,6 +208,7 @@ function App() {
        * @param {KeyboardEvent} e 
        */
       function onKeyDown(e) {
+        console.log(`pressed ${e.key}`)
         if (e.key === 'z') {
           console.log('undoing...')
           setE(e => min(e + 1, edits.length - 1))
@@ -245,9 +217,17 @@ function App() {
           console.log('redoing...')
           setE(e => max(e - 1, 0))
         }
-        if (e.key === 'd') {
+        if (e.key === 'd' || e.key === 'Backspace' || e.key === 'Delete') {
           console.log('toggling deletion...')
           setDeleting(d => !d)
+        }
+        if (e.key === 'Enter') {
+          console.log('downloading...')
+          setDownloading(true)
+        }
+        if (e.key === 'e') {
+          console.log('editing...')
+          setEditing(e => !e)
         }
       }
 
@@ -315,25 +295,31 @@ function App() {
         height={windowHeight}
       />
 
-      <img
-        ref={selSheetRef}
-        id="SelSheet"
-        src={tiles_0}
-        style={{ zIndex: 999 }}
-      />
-
       {
-        !hoverElem ? null : (
-          <div
-            ref={selRef}
-            id="Sel"
-            style={{
-              left: `${selX}px`,
-              top: `${selY}px`,
-              zIndex: hoverElem.style.zIndex,
-            }}
+        !editing ? null : <>
+
+          <img
+            ref={selSheetRef}
+            id="SelSheet"
+            src={tiles_0}
+            style={{ zIndex: 999 }}
           />
-        )
+
+          {
+            !hoverElem ? null : (
+              <div
+                ref={selRef}
+                id="Sel"
+                style={{
+                  left: `${selX}px`,
+                  top: `${selY}px`,
+                  zIndex: hoverElem.style.zIndex,
+                }}
+              />
+            )
+          }
+
+        </>
       }
 
     </div>

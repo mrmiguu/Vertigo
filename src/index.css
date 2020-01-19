@@ -33,6 +33,10 @@ canvas {
   height: 100%;
 }
 
+#Editor {
+  display: grid;
+}
+
 #SelSheet {
   position: absolute;
   justify-self: right;
