@@ -24,9 +24,14 @@ export default ({ onLeft, onRight, onUp, onDown, debug }) => {
 
           if (typeof offKey === 'function') {
 
-            let offKeyCb = () => {
+            let offKeyCb = e2 => {
+              if (e2.key !== e.key) return
               offKey()
               window.removeEventListener('keyup', offKeyCb)
+              // console.log(`
+              // offKey()
+              // window.removeEventListener('keyup', offKeyCb)
+              // for ${e.key}`)
             }
 
             window.addEventListener('keyup', offKeyCb)
@@ -35,7 +40,10 @@ export default ({ onLeft, onRight, onUp, onDown, debug }) => {
       }
 
       window.addEventListener('keydown', onKey)
-      return () => window.removeEventListener('keydown', onKey)
+      return () => {
+        window.removeEventListener('keydown', onKey)
+        console.log(`window.removeEventListener('keydown', onKey) for ${e.key}`)
+      }
     },
     []
   )

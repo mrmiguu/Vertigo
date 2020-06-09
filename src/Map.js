@@ -31,7 +31,8 @@ export default ({ load, x, y, debug, children, ...props }) => {
         targets: ref.current,
         translateX: {
           value: wndW / 2 - x * 32 - 32 / 2,
-          easing: 'spring(1, 30, 10, 0)',
+          // easing: 'spring(1, 30, 10, 0)',
+          easing: 'linear',
           duration: 1500,
         },
         translateY: {
